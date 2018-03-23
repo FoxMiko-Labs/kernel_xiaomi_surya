@@ -30,6 +30,3 @@ HOST_EXTRACFLAGS += -DNO_YAML
 
 # dependencies on generated files need to be listed explicitly
 $(obj)/dtc-lexer.lex.o: $(obj)/dtc-parser.tab.h
-
-# generated files need to include *.cmd
-targets := dtc-lexer.lex.c dtc-parser.tab.c dtc-parser.tab.h
