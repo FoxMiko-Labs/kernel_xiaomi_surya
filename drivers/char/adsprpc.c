@@ -3699,7 +3699,7 @@ static int fastrpc_set_process_info(struct fastrpc_file *fl)
 		fl->debugfs_file = debugfs_create_file(fl->debug_buf, 0644,
 			debugfs_root, fl, &debugfs_fops);
 		if (IS_ERR_OR_NULL(fl->debugfs_file)) {
-			pr_warn("Error: %s: %s: failed to create debugfs file %s\n",
+			pr_debug("Error: %s: %s: failed to create debugfs file %s\n",
 				cur_comm, __func__, fl->debug_buf);
 			fl->debugfs_file = NULL;
 			kfree(fl->debug_buf);
@@ -4400,7 +4400,7 @@ static int fastrpc_cb_probe(struct device *dev)
 		debugfs_global_file = debugfs_create_file("global", 0644,
 			debugfs_root, NULL, &debugfs_fops);
 		if (IS_ERR_OR_NULL(debugfs_global_file)) {
-			pr_warn("Error: %s: %s: failed to create debugfs global file\n",
+			pr_debug("Error: %s: %s: failed to create debugfs global file\n",
 				current->comm, __func__);
 			debugfs_global_file = NULL;
 		}
@@ -4818,7 +4818,7 @@ static int __init fastrpc_device_init(void)
 
 	debugfs_root = debugfs_create_dir("adsprpc", NULL);
 	if (IS_ERR_OR_NULL(debugfs_root)) {
-		pr_warn("Error: %s: %s: failed to create debugfs root dir\n",
+		pr_debug("Error: %s: %s: failed to create debugfs root dir\n",
 			current->comm, __func__);
 		debugfs_remove_recursive(debugfs_root);
 		debugfs_root = NULL;
