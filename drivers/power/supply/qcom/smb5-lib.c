@@ -32,7 +32,6 @@
 #include <linux/gpio.h>
 #endif
 
-#if CONFIG_TOUCHSCREEN_COMMON
 typedef struct touchscreen_usb_piugin_data{
 	bool valid;
 	bool usb_plugged_in;
@@ -41,7 +40,6 @@ typedef struct touchscreen_usb_piugin_data{
 
 touchscreen_usb_piugin_data_t g_touchscreen_usb_pulgin = {0};
 EXPORT_SYMBOL(g_touchscreen_usb_pulgin);
-#endif
 
 #define smblib_err(chg, fmt, ...)		\
 	pr_err("%s: %s: " fmt, chg->name,	\
@@ -6505,14 +6503,10 @@ void smblib_usb_plugin_locked(struct smb_charger *chg)
 	smblib_dbg(chg, PR_INTERRUPT, "IRQ: usbin-plugin %s\n",
 					vbus_rising ? "attached" : "detached");
 
-#if CONFIG_TOUCHSCREEN_COMMON
 	g_touchscreen_usb_pulgin.usb_plugged_in = vbus_rising;
 	if (g_touchscreen_usb_pulgin.valid){
 		g_touchscreen_usb_pulgin.event_callback();
 	}
-
-#endif
-
 }
 
 irqreturn_t usb_plugin_irq_handler(int irq, void *data)
