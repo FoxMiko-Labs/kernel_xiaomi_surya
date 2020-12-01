@@ -186,7 +186,7 @@ struct statx {
 #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
 #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
 #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
-#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
+#define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
 
 
 #endif /* _UAPI_LINUX_STAT_H */
