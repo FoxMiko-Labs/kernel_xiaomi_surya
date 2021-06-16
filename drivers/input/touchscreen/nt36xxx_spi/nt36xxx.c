@@ -126,8 +126,6 @@ const uint16_t gesture_key_array[] = {
 #endif
 
 static uint8_t bTouchIsAwake;
-static uint8_t open_pocket_fail;
-static uint8_t close_pocket_fail;
 
 #if WAKEUP_GESTURE
 #define WAKEUP_OFF 4
@@ -1241,45 +1239,6 @@ static uint8_t nvt_wdt_fw_recovery(uint8_t *point_data)
 }
 #endif	/* #if NVT_TOUCH_WDT_RECOVERY */
 
-#if LCT_TP_PALM_EN
-/*2020.228 longcheer taocheng add for pocket mode start*/
-#define FUNCPAGE_PALM 4
-#define PACKET_PALM_ON 3
-#define PACKET_PALM_OFF 4
-int32_t nvt_check_palm(uint8_t input_id, uint8_t *data)
-{
-	int32_t ret = 0;
-	uint8_t func_type = data[2];
-	uint8_t palm_state = data[3];
-	uint8_t keycode = 0;
-
-		if ((input_id == DATA_PROTOCOL) && (func_type == FUNCPAGE_PALM)) {
-			ret = palm_state;
-			if (palm_state == PACKET_PALM_ON) {
-				NVT_LOG("get packet palm on event.\n");
-				keycode = gesture_key_array[13];
-			} else if (palm_state == PACKET_PALM_OFF) {
-				NVT_LOG("get packet palm off event.\n");
-			} else {
-				NVT_ERR("invalid palm state %d!\n", palm_state);
-				ret = -1;
-			}
-		} else {
-			ret = 0;
-		}
-		if (keycode > 0) {
-			NVT_LOG("powerkey.\n");
-			input_report_key(ts->input_dev, keycode, 1);
-			input_sync(ts->input_dev);
-			input_report_key(ts->input_dev, keycode, 0);
-			input_sync(ts->input_dev);
-			set_lct_tp_palm_status(false);
-		}
-	return ret;
-}
-/*2020.2.28 longcheer taocheng add for pocket mode end*/
-#endif
-
 #define POINT_DATA_LEN 65
 /*******************************************************
 Description:
@@ -1352,11 +1311,6 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
 
 	input_id = (uint8_t)(point_data[1] >> 3);
-#if LCT_TP_PALM_EN
-	if (nvt_check_palm(input_id, point_data)) {
-		goto XFER_ERROR;
-	}
-#endif
 #if WAKEUP_GESTURE
 	if (bTouchIsAwake == 0) {
 		//input_id = (uint8_t)(point_data[1] >> 3);
@@ -2678,13 +2632,6 @@ static int32_t nvt_ts_resume(struct device *dev)
 	NVT_LOG("bTouchIsAwake = 1\n");
 	mutex_unlock(&ts->lock);
 
-#if LCT_TP_PALM_EN
-	if (open_pocket_fail) {
-		NVT_LOG("re-open pocket mode\n");
-		lct_nvt_tp_palm_callback(false);
-	}
-#endif
-
 #if WAKEUP_GESTURE
 	if (ts->delay_gesture) {
 		lct_nvt_tp_gesture_callback(!ts->is_gesture_mode);
@@ -2699,14 +2646,6 @@ static int32_t nvt_ts_resume(struct device *dev)
 #endif
 
 	NVT_LOG("end\n");
-
-#if LCT_TP_PALM_EN
-	msleep(100);
-	if (close_pocket_fail) {
-		NVT_LOG("re-close pocket mode\n");
-		lct_nvt_tp_palm_callback(true);
-	}
-#endif
 
 	return 0;
 }
