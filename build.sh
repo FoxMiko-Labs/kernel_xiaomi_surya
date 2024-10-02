@@ -16,6 +16,7 @@ RESET='\033[0m'; BOLD='\033[1m'
 KERNEL_DIR=$(pwd)
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="$KERNEL_DIR/../clang"
+GCC32_DIR="$KERNEL_DIR/../arm-linux-androideabi-4.9"
 ARCH="arm64"
 BUILD_LOG="$KERNEL_DIR/build.log"
 DATE=$(date +"%Y-%m-%d_%H-%M")
@@ -55,7 +56,8 @@ export PATH="$CLANG_DIR/bin:$PATH"
 	export USE_CCACHE=1
 	export KBUILD_BUILD_HOST=xyz
 	export KBUILD_BUILD_USER=standalone
-	
+	export KBUILD_COMPILER_STRING="Fox-69-Clang version 21.0.0"
+
 # 🔍 Auto detect defconfig
 CONFIG_PATH="$KERNEL_DIR/arch/arm64/configs"
 DEFCONFIGS=($(ls "$CONFIG_PATH" | grep -E "defconfig$"))
