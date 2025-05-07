@@ -121,6 +121,16 @@ config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 	  loading your cpufreq low-level hardware driver, using the
 	  'interactive' governor for latency-sensitive workloads.
 
+config CPU_FREQ_DEFAULT_GOV_SCHEDHORIZON
+	bool "schedhorizon"
+	depends on SMP
+	select CPU_FREQ_GOV_SCHEDHORIZON
+	select CPU_FREQ_GOV_PERFORMANCE
+	help
+	  Use the 'schedhorizon' CPUFreq governor by default. If unsure,
+	  have a look at the help section of that governor. The fallback
+	  governor will be 'performance'.
+	  
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -249,6 +259,148 @@ config CPU_FREQ_GOV_INTERACTIVE
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_SCHEDHORIZON
+	bool "'schedhorizon' cpufreq policy governor"
+	depends on CPU_FREQ && SMP
+	select CPU_FREQ_GOV_ATTR_SET
+	select IRQ_WORK
+	help
+	  This is a modified version of schedutil, introducing two new tunables: 
+          "efficient_freq" and "up_delay".
+          Only raise cpufreq to the non-efficient one (higher than effcient frequencies) 
+          if the governor keeps requiring non-efficient frequencies for more than up_delay time.
+          Override the new frequencies with the efficient one if the consecutive request time 
+          doesn't reach up_delay.
+          The two tunables support multiple args, e.g. you can set "2092800 2400000" for 
+          "efficient_freq" and set "50 60" for "up_delay", which means it would wait 50ms 
+          before raising the frequency to 2092mhz and wait for 60ms before raising the frequency 
+          to 2400mhz.
+	  If in doubt, say N.
+
+if CPU_FREQ_GOV_SCHEDHORIZON
+
+config SCHEDHORIZON_DEFAULT_UP_RATE_LIMIT_HP
+	int "Default up rate-limit for schedutil on big cluster"
+	default 2000
+	help
+	  This sets schedutil's default frequency up rate-limit for big cluster in
+	  microseconds.
+
+config SCHEDHORIZON_DEFAULT_DOWN_RATE_LIMIT_HP
+	int "Default down rate-limit for schedutil on big cluster"
+	default 2000
+	help
+	  This sets schedutil's default frequency down rate-limit in
+	  microseconds.
+
+config SCHEDHORIZON_DEFAULT_UP_RATE_LIMIT_LP
+	int "Default up rate-limit for schedutil on little cluster"
+	default 2000
+	help
+	  This sets schedutil's default frequency up rate-limit for little cluster in
+	  microseconds.
+
+config SCHEDHORIZON_DEFAULT_DOWN_RATE_LIMIT_LP
+	int "Default down rate-limit for schedutil on little cluster"
+	default 2000
+	help
+	  This sets schedutil's default frequency down rate-limit for little cluster in
+	  microseconds.
+	  
+config SCHEDHORIZON_DEFAULT_EFFICIENT_FREQ_LP
+	int "Default efficient frequency for the lp cluster"
+	default 0
+	help
+	  This sets schedhorizon's default efficient frequency for the lp
+	  cluster. This frequency needs to be set according to the available
+	  frequencies at cpufreq-table-0 for the little cores.
+
+config SCHEDHORIZON_DEFAULT_EFFICIENT_FREQ_HP
+	int "Default efficient frequency for the hp cluster"
+	default 0
+	help
+	  This sets schedhorizon's default efficient frequency for the hp
+	  cluster. This frequency needs to be set according to the available
+	  frequencies at cpufreq-table-4 for the big cores.
+
+config SCHEDHORIZON_DEFAULT_UP_DELAY_LP
+	int "Default multiplicand of the up delay for the lp cluster"
+	default "100"
+	help
+	  This sets schedhorizon's default up delay for the lp cluster where
+	  the default value acts as a multiplicand which is to be multiplied
+	  by the number of nanosecond in one milisecond (NSEC_PER_MSEC).
+
+config SCHEDHORIZON_DEFAULT_UP_DELAY_HP
+	int "Default multiplicand of the up delay for the hp cluster"
+	default "100"
+	help
+	  This sets schedhorizon's default up delay for the hp cluster where
+	  the default value acts as a multiplicand which is to be multiplied
+	  by the number of nanosecond in one milisecond (NSEC_PER_MSEC).
+endif
+	  
+config CPU_INPUT_BOOST
+	bool "CPU Input Boost"
+	help
+	  Boosts the CPU on touchscreen and touchpad input, and allows for
+	  boosting on other custom events, mainly which is intended to be for
+	  boosting when there is a new frame ready to be rendered to the
+	  display. The boost frequencies for this driver should be set so that
+	  frame drops are near-zero at the boosted frequencies and power
+	  consumption is minimized at said frequency combination.
+
+if CPU_INPUT_BOOST
+
+config INPUT_BOOST_DURATION_MS
+	int "Input boost duration"
+	default "100"
+	help
+	  Input boost duration in milliseconds.
+
+config WAKE_BOOST_DURATION_MS
+	int "Wake boost duration"
+	default "1000"
+	help
+	  Wake boost duration in milliseconds.
+
+config INPUT_BOOST_FREQ_LP
+	int "Low-power cluster boost freq"
+	default "0"
+	help
+	  Input boost frequency for the low-power CPU cluster.
+
+config INPUT_BOOST_FREQ_PERF
+	int "Performance cluster boost freq"
+	default "0"
+	help
+	  Input boost frequency for the performance CPU cluster.
+
+config MAX_BOOST_FREQ_LP
+	int "Low-power cluster max-boost freq"
+	default "0"
+	help
+	  Max-boost frequency for the low-power CPU cluster.
+
+config MAX_BOOST_FREQ_PERF
+	int "Performance cluster max-boost freq"
+	default "0"
+	help
+	  Max-boost frequency for the performance CPU cluster.
+
+config MIN_FREQ_LP
+	int "LP cluster min boost to set after boost"
+	default "0"
+	help
+	  Min freq to set for lp cluster when boost is over.
+
+config MIN_FREQ_PERF
+	int "HP cluster min boost to set after boost"
+	default "0"
+	help
+	  Min freq to set for hp cluster when boost is over.
+endif
 
 comment "CPU frequency scaling drivers"
 
