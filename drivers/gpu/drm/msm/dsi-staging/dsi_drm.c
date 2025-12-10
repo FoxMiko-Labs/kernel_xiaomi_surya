@@ -260,49 +260,73 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 		atomic_set(&prim_panel_is_on, true);
 }
 
-/**
- *  dsi_bridge_interface_enable - Panel light on interface for fingerprint
- *  In order to improve panel light on performance when unlock device by
- *  fingerprint, export this interface for fingerprint.Once finger touch
- *  happened, it could light on LCD panel in advance of android resume.
- *
- *  @timeout: DSI bridge wait time for android resume and set panel on.
- *            If timeout, dsi bridge will disable panel to avoid fingerprint
- *            touch by mistake.
- */
-
-int dsi_bridge_interface_enable(int timeout)
+int panel_disp_param_send(struct dsi_display *display, int cmd);
+static void dsi_bridge_disp_param_set(struct drm_bridge *bridge, int cmd)
 {
-	int ret = 0;
+	int rc = 0;
+	struct dsi_bridge *c_bridge;
 
-	ret = wait_event_timeout(resume_wait_q,
-		!atomic_read(&resume_pending),
-		msecs_to_jiffies(WAIT_RESUME_TIMEOUT));
-	if (!ret) {
-		pr_info("Primary fb resume timeout\n");
-		return -ETIMEDOUT;
+	if (!bridge) {
+		pr_err("Invalid params\n");
+		return;
 	}
 
-	mutex_lock(&gbridge->base.lock);
+	c_bridge = to_dsi_bridge(bridge);
 
-	if (atomic_read(&prim_panel_is_on)) {
-		mutex_unlock(&gbridge->base.lock);
+	SDE_ATRACE_BEGIN("panel_disp_param_send");
+	rc = panel_disp_param_send(c_bridge->display, cmd);
+	if (rc) {
+		pr_err("[%d] DSI disp param send failed, rc=%d\n",
+		       c_bridge->id, rc);
+	}
+	SDE_ATRACE_END("panel_disp_param_send");
+}
+
+static ssize_t dsi_bridge_disp_param_get(struct drm_bridge *bridge, char *buf)
+{
+	struct dsi_bridge *c_bridge;
+	struct dsi_display *display;
+	struct dsi_panel *panel;
+	ssize_t ret = 0;
+
+	if (!bridge) {
+		pr_err("Invalid params\n");
 		return 0;
+	} else {
+		SDE_ATRACE_BEGIN("panel_disp_param_get");
+		c_bridge = to_dsi_bridge(bridge);
+		if(c_bridge == NULL)
+			return 0;
+		display = c_bridge->display;
+		if(display == NULL)
+			return 0;
+		panel = display->panel;
+		if (panel) {
+			ret = strlen(panel->panel_read_data);
+			ret = ret > 255 ? 255 : ret;
+			if (ret > 0)
+				memcpy(buf, panel->panel_read_data, ret);
+		}
+		SDE_ATRACE_END("panel_disp_param_get");
 	}
-
-	__pm_stay_awake(&prim_panel_wakelock);
-	gbridge->dsi_mode.dsi_mode_flags = 0;
-	dsi_bridge_pre_enable(&gbridge->base);
-
-	if (timeout > 0)
-		schedule_delayed_work(&prim_panel_work, msecs_to_jiffies(timeout));
-	else
-		__pm_relax(&prim_panel_wakelock);
-
-	mutex_unlock(&gbridge->base.lock);
 	return ret;
 }
-EXPORT_SYMBOL(dsi_bridge_interface_enable);
+
+static int dsi_bridge_get_panel_info(struct drm_bridge *bridge, char *buf)
+{
+	int rc = 0;
+	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+
+	if (!c_bridge) {
+		pr_err("Invalid params\n");
+		return rc;
+	}
+
+	if (c_bridge->display->name)
+		return snprintf(buf, PAGE_SIZE, c_bridge->display->name);
+
+	return rc;
+}
 
 static void dsi_bridge_enable(struct drm_bridge *bridge)
 {
@@ -653,6 +677,9 @@ static const struct drm_bridge_funcs dsi_bridge_ops = {
 	.disable      = dsi_bridge_disable,
 	.post_disable = dsi_bridge_post_disable,
 	.mode_set     = dsi_bridge_mode_set,
+	.disp_param_set = dsi_bridge_disp_param_set,
+	.disp_param_get = dsi_bridge_disp_param_get,
+	.disp_get_panel_info = dsi_bridge_get_panel_info,
 };
 
 int dsi_conn_set_info_blob(struct drm_connector *connector,

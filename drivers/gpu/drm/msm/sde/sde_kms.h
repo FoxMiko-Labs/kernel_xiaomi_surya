@@ -669,6 +669,6 @@ void sde_kms_release_splash_resource(struct sde_kms *sde_kms,
  * @crtc: pointer to drm_crtc structure
  */
 void sde_kms_trigger_early_wakeup(struct sde_kms *sde_kms,
-		struct drm_crtc *crtc);
+                struct drm_crtc *crtc);
 
 #endif /* __sde_kms_H__ */
