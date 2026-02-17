@@ -365,7 +365,7 @@ module_param(check_vsafe0v, bool, 0600);
 static int min_sink_current = 900;
 module_param(min_sink_current, int, 0600);
 
-static const u32 default_src_caps[] = { 0x3601912C };	/* VSafe5V @ 1.5A */
+static const u32 default_src_caps[] = { 0x3601912C };	/* VSafe5V @ 3A */
 static const u32 default_snk_caps[] = { 0x2601912C };	/* VSafe5V @ 3A */
 
 struct vdm_tx {
@@ -2994,6 +2994,16 @@ static void usbpd_sm(struct work_struct *w)
 			usbpd_set_state(pd, PE_PRS_SRC_SNK_TRANSITION_TO_OFF);
 			break;
 		} else if (IS_CTRL(rx_msg, MSG_VCONN_SWAP)) {
+			if (!pd->vconn_is_external &&
+					(pd->requested_voltage > 5000000)) {
+				ret = pd_send_msg(pd, MSG_REJECT,
+						NULL, 0, SOP_MSG);
+				if (ret) {
+					usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+					break;
+				}
+				break;
+			}
 			ret = pd_send_msg(pd, MSG_ACCEPT, NULL, 0, SOP_MSG);
 			if (ret) {
 				usbpd_set_state(pd, PE_SEND_SOFT_RESET);
@@ -3280,6 +3290,7 @@ static void usbpd_sm(struct work_struct *w)
 			usbpd_set_state(pd, PE_PRS_SNK_SRC_TRANSITION_TO_OFF);
 			break;
 		} else if (IS_CTRL(rx_msg, MSG_VCONN_SWAP)) {
+<<<<<<< HEAD
 			/*
 			 * if VCONN is connected to VBUS, make sure we are
 			 * not in high voltage contract, otherwise reject.
@@ -3294,6 +3305,18 @@ static void usbpd_sm(struct work_struct *w)
 				break;
 			}
 
+=======
+			if (!pd->vconn_is_external &&
+					(pd->requested_voltage > 5000000)) {
+				ret = pd_send_msg(pd, MSG_REJECT,
+						NULL, 0, SOP_MSG);
+				if (ret) {
+					usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+					break;
+				}
+				break;
+			}
+>>>>>>> 2c15cbf6aeec (usb: Import missing surya power supply and USB changes)
 			ret = pd_send_msg(pd, MSG_ACCEPT, NULL, 0, SOP_MSG);
 			if (ret) {
 				usbpd_set_state(pd, PE_SEND_SOFT_RESET);
@@ -5189,6 +5212,14 @@ static void usbpd_release(struct device *dev)
 
 static int num_pd_instances;
 
+static struct usbpd *g_pd;
+
+struct usbpd *smb_get_g_pd(void)
+{
+	return g_pd;
+}
+EXPORT_SYMBOL(smb_get_g_pd);
+
 /**
  * usbpd_create - Create a new instance of USB PD protocol/policy engine
  * @parent - parent device to associate with
@@ -5450,9 +5481,15 @@ struct usbpd *usbpd_create(struct device *parent)
 	/* force read initial power_supply values */
 	psy_changed(&pd->psy_nb, PSY_EVENT_PROP_CHANGED, pd->usb_psy);
 
+<<<<<<< HEAD
 	g_pd = pd;
 
 	pr_err("usbpd_create successfully:pd=%x,g_pd=%x\n", pd, g_pd);
+=======
+	if (!g_pd)
+		g_pd = pd;
+
+>>>>>>> 2c15cbf6aeec (usb: Import missing surya power supply and USB changes)
 	return pd;
 
 del_inst:
