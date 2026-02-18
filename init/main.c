@@ -106,6 +106,16 @@ static int kernel_init(void *);
 extern void init_IRQ(void);
 extern void radix_tree_init(void);
 
+bool is_legacy_timestamp = false;
+EXPORT_SYMBOL(is_legacy_timestamp);
+
+static int __init read_is_legacy_timestamp(char *s)
+{
+    strtobool(s, &is_legacy_timestamp);
+    return 1;
+}
+__setup("init.is_legacy_timestamp=", read_is_legacy_timestamp);
+
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
  * where only the boot processor is running with IRQ disabled.  This means
