@@ -17,8 +17,6 @@
 #include "cam_common_util.h"
 #include "cam_debug_util.h"
 
-extern bool is_legacy_timestamp;
-
 int cam_common_util_get_string_index(const char **strings,
 	uint32_t num_strings, char *matching_string, uint32_t *index)
 {
@@ -71,11 +69,7 @@ void cam_common_util_get_curr_timestamp(struct timeval *time_stamp)
 {
 	struct timespec ts;
 
-	if (is_legacy_timestamp)
-		get_monotonic_boottime(&ts);
-	else
-		ktime_get_ts(&ts);
-
+	ktime_get_ts(&ts);
 	time_stamp->tv_sec    = ts.tv_sec;
 	time_stamp->tv_usec   = ts.tv_nsec/1000;
 }
