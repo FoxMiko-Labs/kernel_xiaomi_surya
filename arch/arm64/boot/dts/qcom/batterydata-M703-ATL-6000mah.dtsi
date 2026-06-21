@@ -23,6 +23,10 @@ qcom,m703-atl-6000mah {
 	qcom,qg-batt-profile-ver = <100>;
 	mi,six-pin-battery;
 
+	qcom,step-chg-ranges = <4250000 4449999 6000000
+				4450000 4479999 5400000
+				4480000 4480000 4000000>;
+
 	qcom,jeita-fcc-ranges = <(-100)  0   580000
 	                        1  50   1050000
 				51  100  2850000
