@@ -6956,7 +6956,7 @@ void sde_crtc_touch_notify(void)
 			break;
 		}
 
-		if (dsi_display && dsi_display->is_prim_display && dsi_display->panel
+		if (dsi_display && !strcmp(dsi_display->dsi_type, "primary") && dsi_display->panel
 			&& !dsi_display->panel->panel_max_frame_rate) {
 				event.type = DRM_EVENT_TOUCH;
 				event.length = sizeof(u32);
