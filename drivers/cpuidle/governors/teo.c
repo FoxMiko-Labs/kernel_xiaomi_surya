@@ -102,6 +102,7 @@
 #include <linux/kernel.h>
 #include <linux/sched/clock.h>
 #include <linux/tick.h>
+#include <linux/pm_qos.h>
 
 /*
  * The PULSE value is added to metrics when they grow and the DECAY_SHIFT value
@@ -288,7 +289,7 @@ static int teo_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 		      bool *stop_tick)
 {
 	struct teo_cpu *cpu_data = per_cpu_ptr(&teo_cpus, dev->cpu);
-	int latency_req = cpuidle_governor_latency_req(dev->cpu);
+	int latency_req = pm_qos_request(PM_QOS_CPU_DMA_LATENCY);
 	unsigned int idx_intercept_sum = 0;
 	unsigned int intercept_sum = 0;
 	unsigned int idx_recent_sum = 0;
