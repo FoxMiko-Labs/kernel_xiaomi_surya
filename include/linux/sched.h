@@ -333,6 +333,7 @@ struct vtime {
 
 struct sched_param {
 	int sched_priority;
+};
 
 /*
  * Utilization clamp constraints.
