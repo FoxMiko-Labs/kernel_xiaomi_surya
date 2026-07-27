@@ -16,6 +16,7 @@ RESET='\033[0m'; BOLD='\033[1m'
 KERNEL_DIR=$(pwd)
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="$KERNEL_DIR/../neutron-clang"
+GCC32_DIR="$KERNEL_DIR/../arm-linux-androideabi-4.9"
 ARCH="arm64"
 BUILD_LOG="$KERNEL_DIR/build.log"
 DATE=$(date +"%Y-%m-%d_%H-%M")
@@ -49,7 +50,7 @@ if [ ! -f "$CLANG_DIR/bin/ld.lld" ]; then
     sudo apt install -y lld &>/dev/null
 fi
 
-export PATH="$CLANG_DIR/bin:$PATH"
+export PATH="$CLANG_DIR/bin:$GCC32_DIR/bin:$PATH"
 
 # Set environment variables
 	export USE_CCACHE=1
@@ -112,8 +113,8 @@ make -j$(nproc --all) O="$OUT_DIR" ARCH="$ARCH" \
     	OBJDUMP=llvm-objdump \
     	READELF=llvm-readelf \
     	LLVM=1 LLVM_IAS=1 \
-    	CROSS_COMPILE=aarch64-linux-gnu- \
-        CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+       CROSS_COMPILE="$CLANG_DIR/bin/aarch64-linux-gnu-" \
+     CROSS_COMPILE_ARM32="$GCC32_DIR/bin/arm-linux-androideabi-" \
     	2>&1 | tee -a "$BUILD_LOG"
 
 # 🕒 Timer selesai
