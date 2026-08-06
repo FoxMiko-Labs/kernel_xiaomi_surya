@@ -3290,22 +3290,11 @@ static void usbpd_sm(struct work_struct *w)
 			usbpd_set_state(pd, PE_PRS_SNK_SRC_TRANSITION_TO_OFF);
 			break;
 		} else if (IS_CTRL(rx_msg, MSG_VCONN_SWAP)) {
-<<<<<<< HEAD
+
 			/*
 			 * if VCONN is connected to VBUS, make sure we are
 			 * not in high voltage contract, otherwise reject.
 			 */
-			if (!pd->vconn_is_external &&
-					(pd->requested_voltage > 5000000)) {
-				ret = pd_send_msg(pd, MSG_REJECT, NULL, 0,
-						SOP_MSG);
-				if (ret)
-					usbpd_set_state(pd, PE_SEND_SOFT_RESET);
-
-				break;
-			}
-
-=======
 			if (!pd->vconn_is_external &&
 					(pd->requested_voltage > 5000000)) {
 				ret = pd_send_msg(pd, MSG_REJECT,
@@ -3316,7 +3305,7 @@ static void usbpd_sm(struct work_struct *w)
 				}
 				break;
 			}
->>>>>>> 2c15cbf6aeec (usb: Import missing surya power supply and USB changes)
+
 			ret = pd_send_msg(pd, MSG_ACCEPT, NULL, 0, SOP_MSG);
 			if (ret) {
 				usbpd_set_state(pd, PE_SEND_SOFT_RESET);
@@ -5230,11 +5219,6 @@ EXPORT_SYMBOL(smb_get_g_pd);
  *
  * Return: struct usbpd pointer, or an ERR_PTR value
  */
-static struct usbpd *g_pd;
-struct usbpd *smb_get_g_pd(void)
-{
-	return g_pd;
-}
 struct usbpd *usbpd_create(struct device *parent)
 {
 	int ret;
@@ -5481,15 +5465,9 @@ struct usbpd *usbpd_create(struct device *parent)
 	/* force read initial power_supply values */
 	psy_changed(&pd->psy_nb, PSY_EVENT_PROP_CHANGED, pd->usb_psy);
 
-<<<<<<< HEAD
-	g_pd = pd;
-
-	pr_err("usbpd_create successfully:pd=%x,g_pd=%x\n", pd, g_pd);
-=======
 	if (!g_pd)
 		g_pd = pd;
 
->>>>>>> 2c15cbf6aeec (usb: Import missing surya power supply and USB changes)
 	return pd;
 
 del_inst:
