@@ -56,7 +56,9 @@ export PATH="$CLANG_DIR/bin:$PATH"
 	export USE_CCACHE=1
 	export KBUILD_BUILD_HOST=xyz
 	export KBUILD_BUILD_USER=standalone
-	export KBUILD_COMPILER_STRING="Fox-69-Clang version 21.0.0"
+	export KBUILD_COMPILER_STRING="FoxyClang version 23.0.0 (pgo, +mlgo, +bolt, +lto, +polly)"
+        export KBUILD_LD_STRING="LLD 23.0.0 bare-metal toolchain +llvm based"
+
 
 # 🔍 Auto detect defconfig
 CONFIG_PATH="$KERNEL_DIR/arch/arm64/configs"
