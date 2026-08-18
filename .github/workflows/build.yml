@@ -80,6 +80,7 @@ jobs:
           tar -xf eva-gcc-arm.tar -C "$GCC32_DIR"
           rm -f eva-gcc-arm.tar
           echo "GCC32 bin contents:"
+          find "$GCC32_DIR" -maxdepth 3 -type d
           ls "$GCC32_DIR/gcc-arm/bin/" | head -10
 
       # -------------------------------------------------------
