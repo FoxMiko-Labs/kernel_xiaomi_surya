@@ -74,11 +74,11 @@ jobs:
         run: |
           mkdir -p "$GCC32_DIR"
           echo "Downloading EVA GCC ARM32..."
-          curl -Lo eva-gcc-arm.tar \
-            "https://github.com/Michikoextv2/gcc-build/releases/download/17082026/eva-gcc-arm-17082026.xz"
-          # Archive extracts into a gcc-arm/ subfolder — preserve that structure
-          tar -xf eva-gcc-arm.xz -C "$GCC32_DIR"
-          rm -f eva-gcc-arm.xz
+          wget -q --show-progress \
+            "https://github.com/Michikoextv2/gcc-build/releases/download/17082026/eva-gcc-arm-17082026.xz" \
+            -O eva-gcc-arm.tar
+          tar -xf eva-gcc-arm.tar -C "$GCC32_DIR"
+          rm -f eva-gcc-arm.tar
           echo "GCC32 bin contents:"
           ls "$GCC32_DIR/gcc-arm/bin/" | head -10
 
