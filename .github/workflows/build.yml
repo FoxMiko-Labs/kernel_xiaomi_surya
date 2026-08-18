@@ -3,9 +3,7 @@ name: Michiko Kernel Build
 on:
   push:
     branches:
-      - main
       - creepy
-      - potato
   workflow_dispatch:
     inputs:
       release_tag:
