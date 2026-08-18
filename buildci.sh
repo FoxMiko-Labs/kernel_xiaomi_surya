@@ -13,9 +13,7 @@ set -euo pipefail
 KERNEL_DIR="$(pwd)"
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../neutron-clang}"
-# GCC32_DIR points to the parent; binaries live in gcc-arm/bin inside it
-GCC32_BASE="${GCC32_BASE:-$KERNEL_DIR/../eva-gcc32}"
-GCC32_DIR="$GCC32_BASE/gcc-arm"
+GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../eva-gcc32}/gcc-arm"
 BUILD_LOG="$KERNEL_DIR/build.log"
 
 ARCH="arm64"
@@ -28,13 +26,6 @@ export USE_CCACHE=1
 export KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST:-github-ci}"
 export KBUILD_BUILD_USER="${KBUILD_BUILD_USER:-michiko}"
 export PATH="$CLANG_DIR/bin:$GCC32_DIR/bin:$PATH"
-
-# Validate GCC32 bin path
-if [ ! -d "$GCC32_DIR/bin" ]; then
-    echo "ERROR: GCC32 bin not found at $GCC32_DIR/bin"
-    echo "       Expected structure: eva-gcc32/gcc-arm/bin/arm-eabi-*"
-    exit 1
-fi
 
 # -------------------------------------------------------
 # Toolchain validation
@@ -55,6 +46,7 @@ echo "======================================================"
 echo " Michiko Kernel CI Build"
 echo "======================================================"
 echo " Toolchain : $CLANG_VERSION"
+echo " GCC32 dir : $GCC32_DIR"
 echo " CPU cores : $CPU_CORES"
 echo " Arch      : $ARCH"
 echo " Out dir   : $OUT_DIR"
