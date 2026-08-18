@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - creepy
+      
   workflow_dispatch:
     inputs:
       release_tag:
@@ -31,7 +32,7 @@ jobs:
       - name: Checkout kernel source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 5
 
       - name: Install build dependencies
         run: |
