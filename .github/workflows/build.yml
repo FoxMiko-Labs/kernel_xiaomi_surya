@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.GCC32_DIR }}
-          key: eva-gcc-arm-17082026
+          key: eva-gcc-arm-17082026-v2
 
       - name: Download and extract GCC ARM32
         if: steps.cache-gcc32.outputs.cache-hit != 'true'
