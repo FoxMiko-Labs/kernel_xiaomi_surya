@@ -1,0 +1,196 @@
+name: Michiko Kernel Build
+
+on:
+  push:
+    branches:
+      - main
+      - creepy
+      - potato
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Custom release tag (leave empty for auto)"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    name: Build Kernel
+    runs-on: ubuntu-22.04
+
+    env:
+      ARCH: arm64
+      KBUILD_BUILD_HOST: standalone
+      KBUILD_BUILD_USER: xyz
+      USE_CCACHE: 1
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CLANG_DIR: ${{ github.workspace }}/neutron-clang
+      GCC32_DIR: ${{ github.workspace }}/eva-gcc32
+      AK3_DIR: ${{ github.workspace }}/AnyKernel3
+      KERNEL_DIR: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            bc bison build-essential ca-certificates cpio curl \
+            flex git libelf-dev libssl-dev lld llvm make \
+            python3 unzip xz-utils zstd
+
+      # -------------------------------------------------------
+      # Toolchain cache — keyed on the download URLs
+      # -------------------------------------------------------
+      - name: Restore Neutron Clang cache
+        id: cache-clang
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CLANG_DIR }}
+          key: neutron-clang-10032024
+
+      - name: Download and extract Neutron Clang
+        if: steps.cache-clang.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$CLANG_DIR"
+          echo "Downloading Neutron Clang..."
+          curl -Lo neutron-clang.tar.zst \
+            "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/10032024/neutron-clang-10032024.tar.zst"
+          tar -I zstd -xf neutron-clang.tar.zst -C "$CLANG_DIR"
+          rm -f neutron-clang.tar.zst
+
+      - name: Restore GCC ARM32 cache
+        id: cache-gcc32
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GCC32_DIR }}
+          key: eva-gcc-arm-17082026
+
+      - name: Download and extract GCC ARM32
+        if: steps.cache-gcc32.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$GCC32_DIR"
+          echo "Downloading EVA GCC ARM32..."
+          curl -Lo eva-gcc-arm.xz \
+            "https://github.com/Michikoextv2/gcc-build/releases/download/17082026/eva-gcc-arm-17082026.xz"
+          # Archive extracts into a gcc-arm/ subfolder — preserve that structure
+          tar -xJf eva-gcc-arm.xz -C "$GCC32_DIR"
+          rm -f eva-gcc-arm.xz
+          echo "GCC32 bin contents:"
+          ls "$GCC32_DIR/gcc-arm/bin/" | head -10
+
+      # -------------------------------------------------------
+      # ccache to speed up incremental builds
+      # -------------------------------------------------------
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ github.ref_name }}-
+            ccache-
+
+      - name: Configure ccache
+        run: |
+          sudo apt-get install -y ccache
+          ccache --max-size=5G
+          ccache --zero-stats
+
+      # -------------------------------------------------------
+      # Kernel build
+      # -------------------------------------------------------
+      - name: Build kernel
+        run: |
+          chmod +x buildci.sh
+          bash buildci.sh
+
+      # -------------------------------------------------------
+      # AnyKernel3 packaging
+      # -------------------------------------------------------
+      - name: Clone AnyKernel3
+        run: |
+          git clone --depth=1 \
+            https://github.com/Michikoextv2/AK3-Surya.git -b screepy \
+            "$AK3_DIR"
+
+      - name: Package kernel into flashable zip
+        run: |
+          DATE_TAG=$(TZ=Asia/Jakarta date +%d%m%Y)
+          ZIP_NAME="SuperCreepy-${DATE_TAG}.zip"
+          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
+          echo "DATE_TAG=${DATE_TAG}" >> "$GITHUB_ENV"
+
+          AK3_KERNEL_DIR="$AK3_DIR/kernels"
+          mkdir -p "$AK3_KERNEL_DIR"
+
+          # Copy kernel images
+          cp "$KERNEL_DIR/out/arch/arm64/boot/Image.gz" "$AK3_KERNEL_DIR/" 2>/dev/null || \
+            echo "Warning: Image.gz not found"
+          cp "$KERNEL_DIR/out/arch/arm64/boot/dtb.img"  "$AK3_KERNEL_DIR/" 2>/dev/null || \
+            echo "Warning: dtb.img not found"
+          cp "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" "$AK3_KERNEL_DIR/" 2>/dev/null || \
+            echo "Warning: dtbo.img not found"
+
+          cd "$AK3_DIR"
+          zip -r9 "$KERNEL_DIR/${ZIP_NAME}" . \
+            -x "*.git*" -x "README.md" -x "*.github*"
+          echo "Packaged: ${ZIP_NAME}"
+
+      # -------------------------------------------------------
+      # Collect last 5 git log entries for release notes
+      # -------------------------------------------------------
+      - name: Generate release notes
+        run: |
+          {
+            echo "## SuperCreepy — Build $(TZ=Asia/Jakarta date '+%d %B %Y')"
+            echo ""
+            echo "### Last 5 Commits"
+            echo ""
+            git log -5 --pretty=format:"- \`%h\` %s (%an)" --no-merges
+            echo ""
+            echo ""
+            echo "### Build Info"
+            echo "- Branch: \`${{ github.ref_name }}\`"
+            echo "- Runner: \`ubuntu-22.04\`"
+            echo "- Clang: Neutron Clang 10032024"
+            echo "- GCC ARM32: EVA GCC 17082026"
+            echo "- Commit: \`${{ github.sha }}\`"
+          } > release_notes.md
+          cat release_notes.md
+
+      # -------------------------------------------------------
+      # Upload artifact (always, for inspection)
+      # -------------------------------------------------------
+      - name: Upload kernel zip as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
+          retention-days: 7
+
+      # -------------------------------------------------------
+      # Create GitHub Release and upload zip
+      # -------------------------------------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag || format('v{0}', env.DATE_TAG) }}
+          name: "SuperCreepy ${{ env.DATE_TAG }}"
+          body_path: release_notes.md
+          files: ${{ env.ZIP_NAME }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------------------------------------
+      # ccache stats for debug
+      # -------------------------------------------------------
+      - name: Show ccache stats
+        if: always()
+        run: ccache --show-stats
