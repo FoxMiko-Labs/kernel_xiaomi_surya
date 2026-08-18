@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Build Kernel
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     env:
       ARCH: arm64
@@ -156,7 +156,7 @@ jobs:
             echo ""
             echo "### Build Info"
             echo "- Branch: \`${{ github.ref_name }}\`"
-            echo "- Runner: \`ubuntu-22.04\`"
+            echo "- Runner: \`ubuntu-24.04\`"
             echo "- Clang: Neutron Clang 10032024"
             echo "- GCC ARM32: EVA GCC 17082026"
             echo "- Commit: \`${{ github.sha }}\`"
