@@ -3,9 +3,8 @@ name: Michiko Kernel Build
 on:
   push:
     branches:
-      - main
       - creepy
-      - potato
+      
   workflow_dispatch:
     inputs:
       release_tag:
@@ -16,7 +15,7 @@ on:
 jobs:
   build:
     name: Build Kernel
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     env:
       ARCH: arm64
@@ -33,7 +32,7 @@ jobs:
       - name: Checkout kernel source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 5
 
       - name: Install build dependencies
         run: |
@@ -68,19 +67,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.GCC32_DIR }}
-          key: eva-gcc-arm-17082026
+          key: eva-gcc-arm-17082026-v2
 
       - name: Download and extract GCC ARM32
         if: steps.cache-gcc32.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$GCC32_DIR"
           echo "Downloading EVA GCC ARM32..."
-          curl -Lo eva-gcc-arm.xz \
-            "https://github.com/Michikoextv2/gcc-build/releases/download/17082026/eva-gcc-arm-17082026.xz"
-          # Archive extracts into a gcc-arm/ subfolder — preserve that structure
-          tar -xJf eva-gcc-arm.xz -C "$GCC32_DIR"
-          rm -f eva-gcc-arm.xz
+          wget -q --show-progress \
+            "https://github.com/Michikoextv2/gcc-build/releases/download/17082026/eva-gcc-arm-17082026.xz" \
+            -O eva-gcc-arm.tar
+          tar -xf eva-gcc-arm.tar -C "$GCC32_DIR"
+          rm -f eva-gcc-arm.tar
           echo "GCC32 bin contents:"
+          find "$GCC32_DIR" -maxdepth 3 -type d
           ls "$GCC32_DIR/gcc-arm/bin/" | head -10
 
       # -------------------------------------------------------
@@ -156,7 +156,7 @@ jobs:
             echo ""
             echo "### Build Info"
             echo "- Branch: \`${{ github.ref_name }}\`"
-            echo "- Runner: \`ubuntu-22.04\`"
+            echo "- Runner: \`ubuntu-24.04\`"
             echo "- Clang: Neutron Clang 10032024"
             echo "- GCC ARM32: EVA GCC 17082026"
             echo "- Commit: \`${{ github.sha }}\`"
