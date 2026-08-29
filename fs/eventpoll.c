@@ -226,6 +226,9 @@ struct eventpoll {
 	/* used to optimize loop detection check */
 	u64 gen;
 
+	/* ep_get_upwards_depth_proc() may still observe epi->ep under RCU */
+	struct rcu_head rcu;
+
 #ifdef CONFIG_NET_RX_BUSY_POLL
 	/* used to track busy poll napi_id */
 	unsigned int napi_id;
@@ -866,7 +869,7 @@ static void ep_free(struct eventpoll *ep)
 	mutex_destroy(&ep->mtx);
 	free_uid(ep->user);
 	wakeup_source_unregister(ep->ws);
-	kfree(ep);
+	kfree_rcu(ep, rcu);
 }
 
 static int ep_eventpoll_release(struct inode *inode, struct file *file)
@@ -879,11 +882,33 @@ static int ep_eventpoll_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+/*
+ * ep->mtx serializes file teardown against epoll poll paths, so the file
+ * cannot be re-used under us while we transiently revive its refcount here.
+ */
+static struct file *epi_fget(const struct epitem *epi)
+{
+	struct file *file = epi->ffd.file;
+
+	if (!atomic_long_inc_not_zero(&file->f_count))
+		return NULL;
+
+	return file;
+}
+
 static inline unsigned int ep_item_poll(struct epitem *epi, poll_table *pt)
 {
-	pt->_key = epi->event.events;
+	struct file *file = epi_fget(epi);
+	unsigned int events;
 
-	return epi->ffd.file->f_op->poll(epi->ffd.file, pt) & epi->event.events;
+	if (!file)
+		return 0;
+
+	pt->_key = epi->event.events;
+	events = vfs_poll(file, pt) & epi->event.events;
+	fput(file);
+
+	return events;
 }
 
 static int ep_read_events_proc(struct eventpoll *ep, struct list_head *head,
