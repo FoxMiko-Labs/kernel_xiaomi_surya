@@ -39,7 +39,8 @@ if [ ! -f "$CLANG_DIR/bin/ld.lld" ]; then
     echo "WARNING: ld.lld not found in toolchain, falling back to system lld"
 fi
 
-CLANG_VERSION=$("$CLANG_DIR/bin/clang" --version | head -n 1)
+CLANG_VERSION=$("$CLANG_DIR/bin/clang" --version)
+CLANG_VERSION="${CLANG_VERSION%%$'\n'*}"
 CPU_CORES=$(nproc --all)
 
 echo "======================================================"
@@ -81,8 +82,9 @@ rm -f "$BUILD_LOG"
 # -------------------------------------------------------
 echo "Generating defconfig ($DEFCONFIG)..."
 make O="$OUT_DIR" ARCH="$ARCH" "$DEFCONFIG" 2>&1 | tee -a "$BUILD_LOG"
+DEFCONFIG_STATUS=${PIPESTATUS[0]}
 
-if [ $? -ne 0 ]; then
+if [ "$DEFCONFIG_STATUS" -ne 0 ]; then
     echo "ERROR: defconfig generation failed. Check $BUILD_LOG"
     exit 1
 fi
