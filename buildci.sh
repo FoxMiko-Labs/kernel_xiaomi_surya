@@ -12,8 +12,8 @@ set -euo pipefail
 # -------------------------------------------------------
 KERNEL_DIR="$(pwd)"
 OUT_DIR="$KERNEL_DIR/out"
-CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../neutron-clang}"
-GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../eva-gcc32}/gcc-arm"
+CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../foxe-clang/install}"
+GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../fox-gcc32}"
 BUILD_LOG="$KERNEL_DIR/build.log"
 
 ARCH="arm64"
@@ -54,7 +54,7 @@ echo " Build log : $BUILD_LOG"
 echo "======================================================"
 
 # -------------------------------------------------------
-# Defconfig — always use surya_defconfig
+# Defconfig — surya_defconfig
 # -------------------------------------------------------
 DEFCONFIG="surya_defconfig"
 CONFIG_FILE="$KERNEL_DIR/arch/arm64/configs/$DEFCONFIG"
@@ -107,8 +107,9 @@ make -j"$CPU_CORES" \
     READELF=llvm-readelf \
     LLVM=1 \
     LLVM_IAS=1 \
-    CROSS_COMPILE="$CLANG_DIR/bin/aarch64-linux-gnu-" \
-    CROSS_COMPILE_ARM32="$GCC32_DIR/bin/arm-eabi-" \
+    CLANG_TRIPLE="aarch64-linux-gnu-" \
+    CROSS_COMPILE="aarch64-linux-gnu-" \
+    CROSS_COMPILE_ARM32="arm-eabi-" \
     2>&1 | tee -a "$BUILD_LOG"
 
 BUILD_END=$(date +%s)
@@ -118,6 +119,8 @@ BUILD_TIME=$((BUILD_END - BUILD_START))
 # Verify output
 # -------------------------------------------------------
 IMAGE="$OUT_DIR/arch/arm64/boot/Image.gz"
+DTB="$OUT_DIR/arch/arm64/boot/dtb.img"
+DTBO="$OUT_DIR/arch/arm64/boot/dtbo.img"
 
 echo ""
 echo "======================================================"
@@ -125,6 +128,8 @@ if [ -f "$IMAGE" ]; then
     echo "Build SUCCESS"
     echo "Image    : $IMAGE"
     echo "Duration : ${BUILD_TIME}s"
+    [ -f "$DTB" ]  && echo "DTB      : $DTB"  || echo "WARNING  : dtb.img not found"
+    [ -f "$DTBO" ] && echo "DTBO     : $DTBO" || echo "WARNING  : dtbo.img not found"
 else
     echo "Build FAILED — Image.gz not found"
     echo "Duration : ${BUILD_TIME}s"
