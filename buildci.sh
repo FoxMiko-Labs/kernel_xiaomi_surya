@@ -87,6 +87,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Polly
+KCFLAGS="-mllvm -polly"
+
 # -------------------------------------------------------
 # Build kernel
 # -------------------------------------------------------
@@ -97,24 +100,25 @@ BUILD_START=$(date +%s)
 make -j"$CPU_CORES" \
     O="$OUT_DIR" \
     ARCH="$ARCH" \
-    CC=clang \
-    LD=ld.lld \
-    AR=llvm-ar \
-    NM=llvm-nm \
-    STRIP=llvm-strip \
-    OBJCOPY=llvm-objcopy \
-    OBJDUMP=llvm-objdump \
-    READELF=llvm-readelf \
+    CC="$CLANG_DIR/bin/clang" \
+    LD="$CLANG_DIR/bin/ld.lld" \
+    AR="$CLANG_DIR/bin/llvm-ar" \
+    NM="$CLANG_DIR/bin/llvm-nm" \
+    STRIP="$CLANG_DIR/bin/llvm-strip" \
+    OBJCOPY="$CLANG_DIR/bin/llvm-objcopy" \
+    OBJDUMP="$CLANG_DIR/bin/llvm-objdump" \
+    READELF="$CLANG_DIR/bin/llvm-readelf" \
     LLVM=1 \
     LLVM_IAS=1 \
     CLANG_TRIPLE="aarch64-linux-gnu-" \
     CROSS_COMPILE="aarch64-linux-gnu-" \
     CROSS_COMPILE_ARM32="arm-eabi-" \
+    ${KCFLAGS:+KCFLAGS="$KCFLAGS"} \
     2>&1 | tee -a "$BUILD_LOG"
 
+BUILD_STATUS=${PIPESTATUS[0]}
 BUILD_END=$(date +%s)
 BUILD_TIME=$((BUILD_END - BUILD_START))
-
 # -------------------------------------------------------
 # Verify output
 # -------------------------------------------------------
