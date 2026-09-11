@@ -14,7 +14,7 @@ KERNEL_DIR="$(pwd)"
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../foxe-clang/install}"
 GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../fox-gcc32}"
-BUILD_LOG="$KERNEL_DIR/build.log"
+# BUILD_LOG="$KERNEL_DIR/build.log"
 
 ARCH="arm64"
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d%H%M")
@@ -50,7 +50,7 @@ echo " GCC32 dir : $GCC32_DIR"
 echo " CPU cores : $CPU_CORES"
 echo " Arch      : $ARCH"
 echo " Out dir   : $OUT_DIR"
-echo " Build log : $BUILD_LOG"
+# echo " Build log : $BUILD_LOG"
 echo "======================================================"
 
 # -------------------------------------------------------
@@ -74,16 +74,16 @@ echo "Cleaning previous build..."
 make clean O="$OUT_DIR" &>/dev/null || true
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
-rm -f "$BUILD_LOG"
+# rm -f "$BUILD_LOG"
 
 # -------------------------------------------------------
 # Generate .config
 # -------------------------------------------------------
 echo "Generating defconfig ($DEFCONFIG)..."
-make O="$OUT_DIR" ARCH="$ARCH" "$DEFCONFIG" 2>&1 | tee -a "$BUILD_LOG"
+make O="$OUT_DIR" ARCH="$ARCH" "$DEFCONFIG"
 
 if [ $? -ne 0 ]; then
-    echo "ERROR: defconfig generation failed. Check $BUILD_LOG"
+    echo "ERROR: defconfig generation failed"
     exit 1
 fi
 
@@ -112,8 +112,8 @@ make -j$(nproc) \
     LLVM_IAS=1 \
     CLANG_TRIPLE="aarch64-linux-gnu-" \
     CROSS_COMPILE="aarch64-linux-gnu-" \
-    CROSS_COMPILE_ARM32="arm-eabi-" \
-    2>&1 | tee -a "$BUILD_LOG"
+    CROSS_COMPILE_ARM32="arm-eabi-"
+    # 2>&1 | tee -a "$BUILD_LOG"
 
 BUILD_END=$(date +%s)
 BUILD_TIME=$((BUILD_END - BUILD_START))
