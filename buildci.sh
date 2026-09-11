@@ -39,8 +39,7 @@ if [ ! -f "$CLANG_DIR/bin/ld.lld" ]; then
     echo "WARNING: ld.lld not found in toolchain, falling back to system lld"
 fi
 
-CLANG_VERSION=$("$CLANG_DIR/bin/clang" --version)
-CLANG_VERSION="${CLANG_VERSION%%$'\n'*}"
+CLANG_VERSION=$("$CLANG_DIR/bin/clang" --version | head -n 1)
 CPU_CORES=$(nproc --all)
 
 echo "======================================================"
@@ -82,9 +81,8 @@ rm -f "$BUILD_LOG"
 # -------------------------------------------------------
 echo "Generating defconfig ($DEFCONFIG)..."
 make O="$OUT_DIR" ARCH="$ARCH" "$DEFCONFIG" 2>&1 | tee -a "$BUILD_LOG"
-DEFCONFIG_STATUS=${PIPESTATUS[0]}
 
-if [ "$DEFCONFIG_STATUS" -ne 0 ]; then
+if [ $? -ne 0 ]; then
     echo "ERROR: defconfig generation failed. Check $BUILD_LOG"
     exit 1
 fi
@@ -99,28 +97,27 @@ echo ""
 echo "Starting kernel build with $CPU_CORES threads..."
 BUILD_START=$(date +%s)
 
-make -j"$CPU_CORES" \
+make -j$(nproc) \
     O="$OUT_DIR" \
     ARCH="$ARCH" \
-    CC="$CLANG_DIR/bin/clang" \
-    LD="$CLANG_DIR/bin/ld.lld" \
-    AR="$CLANG_DIR/bin/llvm-ar" \
-    NM="$CLANG_DIR/bin/llvm-nm" \
-    STRIP="$CLANG_DIR/bin/llvm-strip" \
-    OBJCOPY="$CLANG_DIR/bin/llvm-objcopy" \
-    OBJDUMP="$CLANG_DIR/bin/llvm-objdump" \
-    READELF="$CLANG_DIR/bin/llvm-readelf" \
+    CC=clang \
+    LD=ld.lld \
+    AR=llvm-ar \
+    NM=llvm-nm \
+    STRIP=llvm-strip \
+    OBJCOPY=llvm-objcopy \
+    OBJDUMP=llvm-objdump \
+    READELF=llvm-readelf \
     LLVM=1 \
     LLVM_IAS=1 \
     CLANG_TRIPLE="aarch64-linux-gnu-" \
     CROSS_COMPILE="aarch64-linux-gnu-" \
     CROSS_COMPILE_ARM32="arm-eabi-" \
-    ${KCFLAGS:+KCFLAGS="$KCFLAGS"} \
     2>&1 | tee -a "$BUILD_LOG"
 
-BUILD_STATUS=${PIPESTATUS[0]}
 BUILD_END=$(date +%s)
 BUILD_TIME=$((BUILD_END - BUILD_START))
+
 # -------------------------------------------------------
 # Verify output
 # -------------------------------------------------------
