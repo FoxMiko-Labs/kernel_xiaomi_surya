@@ -14,10 +14,11 @@ KERNEL_DIR="$(pwd)"
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../foxe-clang/install}"
 GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../fox-gcc32}"
-# BUILD_LOG="$KERNEL_DIR/build.log"
+BUILD_LOG="$KERNEL_DIR/build.log"
 
 ARCH="arm64"
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d%H%M")
+export KBUILD_BUILD_TIMESTAMP="$(TZ=Asia/Jakarta date '+%a %b %e %H:%M:%S WIB %Y')"
 
 # -------------------------------------------------------
 # Build environment
@@ -50,7 +51,7 @@ echo " GCC32 dir : $GCC32_DIR"
 echo " CPU cores : $CPU_CORES"
 echo " Arch      : $ARCH"
 echo " Out dir   : $OUT_DIR"
-# echo " Build log : $BUILD_LOG"
+echo " Build log : $BUILD_LOG"
 echo "======================================================"
 
 # -------------------------------------------------------
@@ -74,7 +75,7 @@ echo "Cleaning previous build..."
 make clean O="$OUT_DIR" &>/dev/null || true
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
-# rm -f "$BUILD_LOG"
+rm -f "$BUILD_LOG"
 
 # -------------------------------------------------------
 # Generate .config
@@ -113,7 +114,7 @@ make -j$(nproc) \
     CLANG_TRIPLE="aarch64-linux-gnu-" \
     CROSS_COMPILE="aarch64-linux-gnu-" \
     CROSS_COMPILE_ARM32="arm-eabi-"
-    # 2>&1 | tee -a "$BUILD_LOG"
+    2>&1 | tee -a "$BUILD_LOG"
 
 BUILD_END=$(date +%s)
 BUILD_TIME=$((BUILD_END - BUILD_START))
