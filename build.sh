@@ -22,7 +22,7 @@ OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="$(realpath "$KERNEL_DIR/../clang/install")"
 GCC32_DIR="$(realpath "$KERNEL_DIR/../gcc32/gcc-arm")"
 AK3_REPO="https://github.com/Michikoextv2/AK3-Surya.git"
-AK3_BRANCH="screepy"
+AK3_BRANCH="spotato"
 AK3_DIR="$KERNEL_DIR/AnyKernel3"
 ARCH="arm64"
 BUILD_LOG="$KERNEL_DIR/build.log"
@@ -242,7 +242,7 @@ else
 fi
 
 # Buat flashable ZIP
-ZIP_NAME="Millenia-Kernel-${DATE}.zip"
+ZIP_NAME="SuperPotato-${DATE}.zip"
 cd "$AK3_DIR" || exit 1
 zip -r9 "$KERNEL_DIR/$ZIP_NAME" . -x "*.git*" 2>&1 | tee -a "$BUILD_LOG"
 cd "$KERNEL_DIR" || exit 1
