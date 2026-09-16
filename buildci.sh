@@ -18,6 +18,7 @@ GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../fox-gcc32}"
 
 ARCH="arm64"
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d%H%M")
+export KBUILD_BUILD_TIMESTAMP="$(TZ=Asia/Jakarta date '+%a %b %e %H:%M:%S WIB %Y')"
 
 # -------------------------------------------------------
 # Build environment
