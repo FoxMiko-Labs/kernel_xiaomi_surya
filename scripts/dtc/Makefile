@@ -26,8 +26,8 @@ HOSTCFLAGS_util.o := $(HOSTCFLAGS_DTC)
 HOST_EXTRACFLAGS += -DNO_YAML
 
 # Generated files need one more search path to include headers in source tree
-HOSTCFLAGS_dtc-lexer.lex.o := -I$(src)
-HOSTCFLAGS_dtc-parser.tab.o := -I$(src)
+HOSTCFLAGS_dtc-lexer.lex.o := $(HOSTCFLAGS_DTC)
+HOSTCFLAGS_dtc-parser.tab.o := $(HOSTCFLAGS_DTC)
 
 # dependencies on generated files need to be listed explicitly
 $(obj)/dtc-lexer.lex.o: $(obj)/dtc-parser.tab.h
