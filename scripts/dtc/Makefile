@@ -14,8 +14,8 @@ dtc-objs	+= dtc-lexer.lex.o dtc-parser.tab.o
 HOST_EXTRACFLAGS += -DNO_YAML
 
 # Generated files need one more search path to include headers in source tree
-HOSTCFLAGS_dtc-lexer.lex.o := -I$(src)
-HOSTCFLAGS_dtc-parser.tab.o := -I$(src)
+HOSTCFLAGS_dtc-lexer.lex.o := -I$(src) -I$(src)/libfdt
+HOSTCFLAGS_dtc-parser.tab.o := -I$(src) -I$(src)/libfdt
 
 # dependencies on generated files need to be listed explicitly
 $(obj)/dtc-lexer.lex.o: $(obj)/dtc-parser.tab.h
