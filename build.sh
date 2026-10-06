@@ -242,7 +242,7 @@ else
 fi
 
 # Buat flashable ZIP
-ZIP_NAME="Millenia-Kernel-${DATE}.zip"
+ZIP_NAME="SuperCreepy-${DATE}.zip"
 cd "$AK3_DIR" || exit 1
 zip -r9 "$KERNEL_DIR/$ZIP_NAME" . -x "*.git*" 2>&1 | tee -a "$BUILD_LOG"
 cd "$KERNEL_DIR" || exit 1
