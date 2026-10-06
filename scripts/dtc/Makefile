@@ -12,6 +12,7 @@ dtc-objs	+= dtc-lexer.lex.o dtc-parser.tab.o
 
 # Disable YAML usage to compile
 HOST_EXTRACFLAGS += -DNO_YAML
+HOST_EXTRACFLAGS += -I$(srctree)/scripts/dtc/libfdt
 
 # Generated files need one more search path to include headers in source tree
 HOSTCFLAGS_dtc-lexer.lex.o := -I$(src) -I$(src)/libfdt
