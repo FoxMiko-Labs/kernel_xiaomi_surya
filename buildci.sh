@@ -88,9 +88,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Polly
-KCFLAGS="-mllvm -polly"
-
 # -------------------------------------------------------
 # Build kernel
 # -------------------------------------------------------
@@ -98,7 +95,7 @@ echo ""
 echo "Starting kernel build with $CPU_CORES threads..."
 BUILD_START=$(date +%s)
 
-make -j$(nproc) \
+make -j4 \
     O="$OUT_DIR" \
     ARCH="$ARCH" \
     CC=clang \
