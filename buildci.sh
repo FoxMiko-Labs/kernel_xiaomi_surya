@@ -14,10 +14,8 @@ KERNEL_DIR="$(pwd)"
 OUT_DIR="$KERNEL_DIR/out"
 CLANG_DIR="${CLANG_DIR:-$KERNEL_DIR/../foxe-clang/install}"
 GCC32_DIR="${GCC32_DIR:-$KERNEL_DIR/../fox-gcc32}"
-# BUILD_LOG="$KERNEL_DIR/build.log"
 
 ARCH="arm64"
-DATE=$(TZ=Asia/Jakarta date +"%Y%m%d%H%M")
 export KBUILD_BUILD_TIMESTAMP="$(TZ=Asia/Jakarta date '+%a %b %e %H:%M:%S WIB %Y')"
 
 # -------------------------------------------------------
@@ -51,7 +49,6 @@ echo " GCC32 dir : $GCC32_DIR"
 echo " CPU cores : $CPU_CORES"
 echo " Arch      : $ARCH"
 echo " Out dir   : $OUT_DIR"
-# echo " Build log : $BUILD_LOG"
 echo "======================================================"
 
 # -------------------------------------------------------
@@ -75,7 +72,6 @@ echo "Cleaning previous build..."
 make clean O="$OUT_DIR" &>/dev/null || true
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
-# rm -f "$BUILD_LOG"
 
 # -------------------------------------------------------
 # Generate .config
@@ -95,23 +91,15 @@ echo ""
 echo "Starting kernel build with $CPU_CORES threads..."
 BUILD_START=$(date +%s)
 
-make -j4 \
+make -j"$CPU_CORES" \
     O="$OUT_DIR" \
     ARCH="$ARCH" \
     CC=clang \
     LD=ld.lld \
-    AR=llvm-ar \
-    NM=llvm-nm \
-    STRIP=llvm-strip \
-    OBJCOPY=llvm-objcopy \
-    OBJDUMP=llvm-objdump \
-    READELF=llvm-readelf \
     LLVM=1 \
     LLVM_IAS=1 \
-    CLANG_TRIPLE="aarch64-linux-gnu-" \
     CROSS_COMPILE="aarch64-linux-gnu-" \
     CROSS_COMPILE_ARM32="arm-eabi-"
-    # 2>&1 | tee -a "$BUILD_LOG"
 
 BUILD_END=$(date +%s)
 BUILD_TIME=$((BUILD_END - BUILD_START))
@@ -134,7 +122,6 @@ if [ -f "$IMAGE" ]; then
 else
     echo "Build FAILED — Image.gz not found"
     echo "Duration : ${BUILD_TIME}s"
-    echo "Check    : $BUILD_LOG"
     exit 1
 fi
 echo "======================================================"
