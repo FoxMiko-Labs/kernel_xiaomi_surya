@@ -298,8 +298,6 @@ config CPU_FREQ_GOV_BLU_SCHEDUTIL
 
 	  If in doubt, say N.
 	  
-endif
-	  
 config CPU_INPUT_BOOST
 	bool "CPU Input Boost"
 	help
